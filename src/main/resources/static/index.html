@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>CRUD Neidy Solano</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background:#f5f5f5; }
+    .container { max-width: 1100px; margin-top: 30px; }
+    .card { box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+    .table-actions button { margin-right: 4px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1 class="mb-4 text-center">CRUD — Neidy Solano</h1>
+  <div class="card mb-4">
+    <div class="card-header"><strong>Formulario</strong></div>
+    <div class="card-body">
+      <input type="hidden" id="id">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Nombres</label>
+          <input type="text" id="nombres" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Apellidos</label>
+          <input type="text" id="apellidos" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" id="email" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Teléfono</label>
+          <input type="text" id="telefono" class="form-control">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Dirección</label>
+          <input type="text" id="direccion" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Ciudad</label>
+          <input type="text" id="ciudad" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">País</label>
+          <input type="text" id="pais" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Tipo Documento</label>
+          <input type="text" id="tipoDocumento" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Número Documento</label>
+          <input type="text" id="numeroDocumento" class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Fecha Nacimiento</label>
+          <input type="date" id="fechaNacimiento" class="form-control">
+        </div>
+      </div>
+      <div class="mt-4 d-flex gap-2">
+        <button id="btnGuardar" class="btn btn-primary">Guardar</button>
+        <button id="btnLimpiar" class="btn btn-secondary">Limpiar</button>
+      </div>
+      <div id="mensaje" class="mt-3"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <strong>Listado de registros</strong>
+      <button id="btnRecargar" class="btn btn-sm btn-outline-primary">Recargar</button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th><th>Nombres</th><th>Apellidos</th><th>Email</th><th>Ciudad</th><th>País</th><th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const API_BASE = "/api/neidy";
+  const $ = (id) => document.getElementById(id);
+  async function listar() {
+    try {
+      const res = await fetch(API_BASE);
+      if (!res.ok) throw new Error("Error al listar");
+      const data = await res.json();
+      const tbody = $("tabla-body");
+      tbody.innerHTML = "";
+      data.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.id ?? ""}</td>
+          <td>${item.nombres ?? ""}</td>
+          <td>${item.apellidos ?? ""}</td>
+          <td>${item.email ?? ""}</td>
+          <td>${item.ciudad ?? ""}</td>
+          <td>${item.pais ?? ""}</td>
+          <td class="table-actions">
+            <button class="btn btn-sm btn-warning" onclick='editar(${JSON.stringify(item.id)})'>Editar</button>
+            <button class="btn btn-sm btn-danger" onclick='eliminar(${JSON.stringify(item.id)})'>Eliminar</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (e) { mostrarMensaje("Error al cargar la lista","danger"); console.error(e); }
+  }
+  async function editar(id) {
+    try {
+      const res = await fetch(`${API_BASE}/${id}`);
+      if (!res.ok) throw new Error("No se encontró el registro");
+      const item = await res.json();
+      $("id").value = item.id ?? "";
+      $("nombres").value = item.nombres ?? "";
+      $("apellidos").value = item.apellidos ?? "";
+      $("email").value = item.email ?? "";
+      $("telefono").value = item.telefono ?? "";
+      $("direccion").value = item.direccion ?? "";
+      $("ciudad").value = item.ciudad ?? "";
+      $("pais").value = item.pais ?? "";
+      $("tipoDocumento").value = item.tipoDocumento ?? "";
+      $("numeroDocumento").value = item.numeroDocumento ?? "";
+      $("fechaNacimiento").value = item.fechaNacimiento ?? "";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e) { mostrarMensaje("Error al cargar el registro","danger"); console.error(e); }
+  }
+  async function eliminar(id) {
+    if (!confirm("¿Seguro que deseas eliminar este registro?")) return;
+    try {
+      const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Error al eliminar");
+      mostrarMensaje("Registro eliminado","success");
+      listar();
+    } catch (e) { mostrarMensaje("Error al eliminar","danger"); console.error(e); }
+  }
+  function limpiarFormulario() {
+    ["id","nombres","apellidos","email","telefono","direccion","ciudad","pais","tipoDocumento","numeroDocumento","fechaNacimiento"]
+      .forEach(id=>$(id).value="");
+  }
+  function mostrarMensaje(texto,tipo="info") {
+    const div = $("mensaje");
+    div.innerHTML = `<div class="alert alert-${tipo} py-2 mb-0">${texto}</div>`;
+    setTimeout(()=>div.innerHTML="",4000);
+  }
+  async function guardar() {
+    const payload = {
+      nombres: $("nombres").value,
+      apellidos: $("apellidos").value,
+      email: $("email").value,
+      telefono: $("telefono").value,
+      direccion: $("direccion").value,
+      ciudad: $("ciudad").value,
+      pais: $("pais").value,
+      tipoDocumento: $("tipoDocumento").value,
+      numeroDocumento: $("numeroDocumento").value,
+      fechaNacimiento: $("fechaNacimiento").value || null
+    };
+    const id = $("id").value;
+    const method = id ? "PUT" : "POST";
+    const url = id ? `${API_BASE}/${id}` : API_BASE;
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Error al guardar");
+      mostrarMensaje(id ? "Registro actualizado" : "Registro creado","success");
+      limpiarFormulario();
+      listar();
+    } catch (e) { mostrarMensaje("Error al guardar","danger"); console.error(e); }
+  }
+  $("btnGuardar").addEventListener("click", e => { e.preventDefault(); guardar(); });
+  $("btnLimpiar").addEventListener("click", e => { e.preventDefault(); limpiarFormulario(); });
+  $("btnRecargar").addEventListener("click", e => { e.preventDefault(); listar(); });
+  listar();
+</script>
+</body>
+</html>

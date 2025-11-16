@@ -1,0 +1,5 @@
+com\example\neidy\NeidySolanoCrudApplication.class
+com\example\neidy\controller\WebController.class
+com\example\neidy\controller\NeidyController.class
+com\example\neidy\model\Neidy.class
+com\example\neidy\repository\NeidyRepository.class
